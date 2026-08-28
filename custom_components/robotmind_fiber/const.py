@@ -1,0 +1,7 @@
+DOMAIN = "robotmind_fiber"
+DATA_BRIDGES = f"{DOMAIN}_bridges"
+SERVICE_EMIT = "emit"
+CONF_FIBER_URL = "fiber_url"
+CONF_PAIRING_CODE = "pairing_code"
+CONF_CONNECTION_ID = "connection_id"
+CONF_SECRET = "secret"

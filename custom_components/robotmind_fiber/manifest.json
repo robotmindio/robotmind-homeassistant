@@ -1,0 +1,10 @@
+{
+  "domain": "robotmind_fiber",
+  "name": "RobotMind Fiber",
+  "codeowners": ["@robotmindio"],
+  "config_flow": true,
+  "documentation": "https://github.com/robotmindio/robotmind-homeassistant",
+  "issue_tracker": "https://github.com/robotmindio/robotmind-homeassistant/issues",
+  "iot_class": "cloud_push",
+  "version": "0.1.0"
+}

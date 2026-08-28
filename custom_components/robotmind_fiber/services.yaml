@@ -1,0 +1,11 @@
+emit:
+  name: Emit Fiber event
+  description: Send a typed event to Fiber from a Home Assistant automation.
+  fields:
+    event_type:
+      required: true
+      selector:
+        text:
+    data:
+      selector:
+        object:
