@@ -13,6 +13,7 @@ from aiohttp import WSMsgType
 from homeassistant.components.recorder import history
 from homeassistant.core import Event, HomeAssistant, ServiceCallTarget
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.storage import Store
 
 from .const import CONF_CONNECTION_ID, CONF_SECRET
 
@@ -34,6 +35,8 @@ class Bridge:
         self._task: asyncio.Task[None] | None = None
         self._ws: Any = None
         self._unsub_state: Any = None
+        self._store = Store(hass, 1, f"robotmind_fiber.{data[CONF_CONNECTION_ID]}")
+        self._completed: dict[str, dict[str, Any]] = {}
 
     @classmethod
     async def pair(cls, hass: HomeAssistant, base_url: str, code: str) -> dict[str, str]:
@@ -50,6 +53,7 @@ class Bridge:
     async def async_start(self) -> None:
         from homeassistant.const import EVENT_STATE_CHANGED
 
+        self._completed = await self._store.async_load() or {}
         self._unsub_state = self.hass.bus.async_listen(EVENT_STATE_CHANGED, self._state_changed)
         self._task = self.hass.async_create_task(self._run())
 
@@ -106,7 +110,7 @@ class Bridge:
                         if message.type is WSMsgType.TEXT:
                             payload = json.loads(message.data)
                             if payload.get("type") == "command":
-                                result = await self._command(payload["command"], payload.get("payload", {}))
+                                result = await self._command(payload["id"], payload["command"], payload.get("payload", {}))
                                 await ws.send_json({"type": "result", "id": payload["id"], "result": result})
             except asyncio.CancelledError:
                 raise
@@ -120,15 +124,18 @@ class Bridge:
         if self._ws is not None and not self._ws.closed:
             await self._ws.send_json(payload)
 
-    async def _command(self, command: str, payload: dict[str, Any]) -> dict[str, Any]:
+    async def _command(self, request_id: str, command: str, payload: dict[str, Any]) -> dict[str, Any]:
+        if request_id in self._completed:
+            return self._completed[request_id]
         try:
             if command == "get_state":
                 state = self.hass.states.get(payload["entity_id"])
-                return {"state": state.as_dict() if state else None}
+                result = {"state": state.as_dict() if state else None}
+                return await self._remember(request_id, result)
             if command == "list_entities":
-                return {"entities": [state.as_dict() for state in self.hass.states.async_all()]}
+                return await self._remember(request_id, {"entities": [state.as_dict() for state in self.hass.states.async_all()]})
             if command == "list_services":
-                return {"services": {domain: sorted(services) for domain, services in self.hass.services.async_services().items()}}
+                return await self._remember(request_id, {"services": {domain: sorted(services) for domain, services in self.hass.services.async_services().items()}})
             if command == "get_history":
                 states = await self.hass.async_add_executor_job(
                     history.get_significant_states,
@@ -140,10 +147,10 @@ class Bridge:
                     True,
                     True,
                 )
-                return {"history": [state.as_dict() for state in states.get(payload["entity_id"], [])]}
+                return await self._remember(request_id, {"history": [state.as_dict() for state in states.get(payload["entity_id"], [])]})
             if command == "fire_event":
                 self.hass.bus.async_fire(payload["event_type"], payload.get("data", {}))
-                return {"fired": payload["event_type"]}
+                return await self._remember(request_id, {"fired": payload["event_type"]})
             if command == "call_service":
                 target = payload.get("target", {})
                 await self.hass.services.async_call(
@@ -155,7 +162,14 @@ class Bridge:
                     ),
                     blocking=True,
                 )
-                return {"called": f"{payload['domain']}.{payload['service']}"}
-            return {"error": "unknown_command"}
+                return await self._remember(request_id, {"called": f"{payload['domain']}.{payload['service']}"})
+            return await self._remember(request_id, {"error": "unknown_command"})
         except Exception as exc:
-            return {"error": f"{type(exc).__name__}:{exc}"}
+            return await self._remember(request_id, {"error": f"{type(exc).__name__}:{exc}"})
+
+    async def _remember(self, request_id: str, result: dict[str, Any]) -> dict[str, Any]:
+        self._completed[request_id] = result
+        while len(self._completed) > 1_000:
+            self._completed.pop(next(iter(self._completed)))
+        await self._store.async_save(self._completed)
+        return result
