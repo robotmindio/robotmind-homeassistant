@@ -35,6 +35,7 @@ class Bridge:
         self._task: asyncio.Task[None] | None = None
         self._ws: Any = None
         self._unsub_state: Any = None
+        self._subscriptions: list[dict[str, Any]] = []
         self._store = Store(hass, 1, f"robotmind_fiber.{data[CONF_CONNECTION_ID]}")
         self._completed: dict[str, dict[str, Any]] = {}
 
@@ -81,6 +82,14 @@ class Bridge:
         new_state = event.data.get("new_state")
         if new_state is None:
             return
+        watched = {
+            entity_id
+            for subscription in self._subscriptions
+            for entity_id in subscription.get("entity_ids", [])
+            if isinstance(entity_id, str)
+        }
+        if new_state.entity_id not in watched:
+            return
         await self._send(
             {
                 "type": "event",
@@ -109,7 +118,13 @@ class Bridge:
                     async for message in ws:
                         if message.type is WSMsgType.TEXT:
                             payload = json.loads(message.data)
-                            if payload.get("type") == "command":
+                            if payload.get("type") == "configure":
+                                self._subscriptions = [
+                                    subscription
+                                    for subscription in payload.get("subscriptions", [])
+                                    if isinstance(subscription, dict)
+                                ]
+                            elif payload.get("type") == "command":
                                 result = await self._command(payload["id"], payload["command"], payload.get("payload", {}))
                                 await ws.send_json({"type": "result", "id": payload["id"], "result": result})
             except asyncio.CancelledError:
