@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 
 from .bridge import Bridge, BridgeError
-from .const import CONF_CONNECTION_ID, CONF_FIBER_URL, CONF_PAIRING_CODE, CONF_SECRET, DOMAIN
+from .const import CONF_CONNECTION_ID, CONF_FIBER_URL, CONF_PAIRING_CODE, DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

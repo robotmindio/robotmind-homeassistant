@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .bridge import Bridge
@@ -17,13 +18,31 @@ async def async_setup_entry(hass: HomeAssistant, entry) -> bool:
     await bridge.async_start()
     if not hass.services.has_service(DOMAIN, SERVICE_EMIT):
         async def emit(call: ServiceCall) -> None:
-            for active in hass.data[DATA_BRIDGES].values():
-                await active.emit(call.data["event_type"], dict(call.data.get("data", {})), call.context.id)
+            bridges = hass.data[DATA_BRIDGES]
+            entry_id = call.data.get("entry_id")
+            if entry_id:
+                active = bridges.get(entry_id)
+                if active is None:
+                    raise ServiceValidationError("Unknown RobotMind Fiber entry_id")
+            elif len(bridges) == 1:
+                active = next(iter(bridges.values()))
+            else:
+                raise ServiceValidationError("entry_id is required when multiple Fiber bridges exist")
+            await active.emit(
+                call.data["event_type"], dict(call.data.get("data", {})), call.context.id
+            )
+
         hass.services.async_register(
             DOMAIN,
             SERVICE_EMIT,
             emit,
-            schema=vol.Schema({vol.Required("event_type"): cv.string, vol.Optional("data", default={}): dict}),
+            schema=vol.Schema(
+                {
+                    vol.Required("event_type"): cv.string,
+                    vol.Optional("data", default={}): dict,
+                    vol.Optional("entry_id"): cv.string,
+                }
+            ),
         )
     return True
 

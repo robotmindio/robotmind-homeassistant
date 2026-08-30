@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect RobotMind Fiber",
+        "description": "Enter the one-time pairing code generated in RobotMind Fiber.",
+        "data": {
+          "fiber_url": "Fiber URL",
+          "pairing_code": "Pairing code"
+        }
+      }
+    },
+    "error": {
+      "cannot_pair": "Fiber could not pair this Home Assistant instance. Check the URL and code."
+    }
+  }
+}
