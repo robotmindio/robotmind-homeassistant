@@ -1,10 +1,11 @@
 {
   "domain": "robotmind_fiber",
   "name": "RobotMind Fiber",
+  "after_dependencies": ["recorder"],
   "codeowners": ["@robotmindio"],
   "config_flow": true,
   "documentation": "https://github.com/robotmindio/robotmind-homeassistant",
-  "issue_tracker": "https://github.com/robotmindio/robotmind-homeassistant/issues",
   "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/robotmindio/robotmind-homeassistant/issues",
   "version": "0.1.0"
 }
