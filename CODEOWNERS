@@ -1,0 +1,11 @@
+# Governance and deployment changes require the repository administrator.
+/.github/** @nez
+/CODEOWNERS @nez
+/AGENT.md @nez
+/AGENTS.md @nez
+/CLAUDE.md @nez
+/deploy.config.json @nez
+/charts/**/templates/** @nez
+/charts/**/Chart.yaml @nez
+/charts/**/values.yaml @nez
+/scripts/promote-image.mjs @nez
