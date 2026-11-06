@@ -1,0 +1,49 @@
+{
+  "delivery": {
+    "mode": "source"
+  },
+  "always_workflows": [
+    ".github/workflows/ci.yml"
+  ],
+  "domain_neutral_workflows": [],
+  "verification_workflows": [],
+  "workflows": [
+    {
+      "workflow": ".github/workflows/ci.yml",
+      "paths": [
+        "**"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "paths": [
+        ".github/**",
+        "CODEOWNERS",
+        "AGENT.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "deploy.config.json",
+        "charts/**/templates/**",
+        "charts/**/Chart.yaml",
+        "charts/**/values.yaml",
+        "scripts/promote-image.mjs"
+      ],
+      "classification": "sensitive",
+      "repair": "protected",
+      "required_workflows": [
+        ".github/workflows/ci.yml"
+      ]
+    },
+    {
+      "paths": [
+        "**"
+      ],
+      "classification": "ordinary",
+      "repair": "agent",
+      "required_workflows": [
+        ".github/workflows/ci.yml"
+      ]
+    }
+  ]
+}
