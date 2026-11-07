@@ -9,3 +9,6 @@ emit:
     data:
       selector:
         object:
+    entry_id:
+      selector:
+        text:
