@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect RobotMind Fiber",
+        "description": "Enter the one-time pairing code generated in RobotMind Fiber.",
+        "data": {
+          "fiber_url": "Fiber URL",
+          "pairing_code": "Pairing code"
+        }
+      }
+    },
+    "error": {
+      "cannot_pair": "Fiber could not pair this Home Assistant instance. Check the URL and code."
+    },
+    "abort": {
+      "already_configured": "This Fiber connection is already configured."
+    }
+  },
+  "services": {
+    "emit": {
+      "name": "Emit Fiber event",
+      "description": "Send a typed event to Fiber from a Home Assistant automation.",
+      "fields": {
+        "event_type": {
+          "name": "Event type",
+          "description": "Type of the event to send."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Event payload."
+        },
+        "entry_id": {
+          "name": "Entry ID",
+          "description": "Config entry to emit through. Required when multiple Fiber bridges exist."
+        }
+      }
+    }
+  }
+}
