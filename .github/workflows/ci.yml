@@ -12,7 +12,7 @@ concurrency:
 jobs:
   hassfest:
     name: Hassfest
-    runs-on: ubuntu-24.04
+    runs-on: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-24.04' || github.run_attempt == 1 && vars.ROBOTMIND_CI_GENERAL_RUNNER == 'ubuntu-24.04' && 'ubuntu-24.04' || 'self-hosted-dind' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: home-assistant/actions/hassfest@86d4564712fa02543c808e3a693dd04f9d3f8361
